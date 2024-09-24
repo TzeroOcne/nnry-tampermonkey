@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Copy Reader Area with Markdown Images for Reaper Scans
+// @name         Reaper Scans Chapter Downloader
 // @namespace    http://tampermonkey.net/
 // @version      0.4
 // @description  Reformats img tags into Markdown format, removes p and br tags, and copies the innerHTML of #readerarea when button is clicked on reaper-scans.com
@@ -8,6 +8,14 @@
 // @grant        GM_setClipboard
 // @grant        GM_registerMenuCommand
 // ==/UserScript==
+
+/**
+ * Tampermonkey script for download chapter
+ * from reaper-scans.com to obsidian app
+ *
+ * This script require obsidian-manga-reader
+ * plugin installed in obsidian
+ */
 
 // Function to clean up HTML and convert img tags to Markdown format
 function cleanAndConvertToMarkdown(container) {
