@@ -18,6 +18,9 @@
  */
 
 // Function to clean up HTML and convert img tags to Markdown format
+/**
+ * @param {HTMLElement} container 
+ * */
 function cleanAndConvertToMarkdown(container) {
   let htmlContent = container.innerHTML; // Use innerHTML for content
 
@@ -27,11 +30,13 @@ function cleanAndConvertToMarkdown(container) {
 
   // Regular expression to find img tags
   const imgTagRegex = /<img [^>]*src="([^"]+)"[^>]*>/g;
+  /** @type {RegExpExecArray | null} */
   let match;
 
   // Process each img tag and convert it to Markdown format
   while ((match = imgTagRegex.exec(htmlContent)) !== null) {
     const imgSrc = match[1]; // Extract the image source URL
+    /** @type {string} */
     const imgFileName = imgSrc.split('/').pop(); // Extract the image file name
     const markdownImage = `![${imgFileName}](${imgSrc})`;
 
@@ -43,6 +48,9 @@ function cleanAndConvertToMarkdown(container) {
 }
 
 // Function to clean up HTML and convert img tags to an array of objects
+/**
+ * @param {HTMLElement} container 
+ * */
 function cleanAndExtractImages(container) {
   let htmlContent = container.innerHTML; // Use innerHTML for content
 
@@ -52,6 +60,7 @@ function cleanAndExtractImages(container) {
 
   // Regular expression to find img tags
   const imgTagRegex = /<img [^>]*src="([^"]+)"[^>]*>/g;
+  /** @type {RegExpExecArray | null} */
   let match;
 
   // Array to hold the extracted image data
@@ -60,6 +69,7 @@ function cleanAndExtractImages(container) {
   // Process each img tag and extract title and source
   while ((match = imgTagRegex.exec(htmlContent)) !== null) {
     const imgSrc = match[1]; // Extract the image source URL
+    /** @type {string} */
     const imgFileName = imgSrc.split('/').pop(); // Extract the image file name
 
     // Push the object with title and source to the array
@@ -74,24 +84,50 @@ function cleanAndExtractImages(container) {
 
 // Function to extract manga title from the meta tag
 function extractMangaTitle() {
-  const metaTag = document.querySelector('meta[property="article:section"]');
-  if (metaTag) {
-    return metaTag.getAttribute('content');
-  } else {
+  const mangaTitleElement = document.querySelector('meta[property="article:section"]');
+  if (!mangaTitleElement) {
     alert('Manga title not found');
-    return '';
+    throw new Error('Manga title not found');
   }
+
+  const mangaTitle = mangaTitleElement.getAttribute('content');
+  if (!mangaTitle) {
+    alert('Manga title empty');
+    throw new Error('Manga title empty');
+  }
+
+  return mangaTitle;
 }
 
 // Function to extract chapter title from the <h1> tag
 function extractChapterTitle() {
-  const h1Tag = document.querySelector('h1.entry-title[itemprop="name"]');
-  if (h1Tag) {
-    return h1Tag.textContent;
-  } else {
+  const chapterTitleElement = document.querySelector('h1.entry-title[itemprop="name"]');
+  if (!chapterTitleElement) {
     alert('Chapter title not found');
-    return '';
+    throw new Error('Chapter title not found');
   }
+
+  if (!chapterTitleElement.textContent) {
+    alert('Chapter title empty');
+    throw new Error('Chapter title empty');
+  }
+
+  return chapterTitleElement.textContent;
+}
+
+function extractChapterLink() {
+  return location.pathname.replace(/^\/+|\/+$/g, '');
+}
+
+function extractNextChapterLink() {
+  /** @type {HTMLAnchorElement|null} */
+  const nextChapterButton = document.querySelector('a.ch-next-btn');
+  if (!nextChapterButton) {
+    alert('Next chapter button not found');
+    throw new Error('Next chapter button not found');
+  }
+
+  return (new URL(nextChapterButton.href)).pathname.replace(/^\/+|\/+$/g, '');
 }
 
 function createDownloadButton() {
@@ -113,9 +149,7 @@ function createDownloadButton() {
 
 const group = 'reaper-scans';
 
-(function() {
-  'use strict';
-
+function main() {
   // Create a button element
   const downloadButton = createDownloadButton();
 
@@ -126,11 +160,15 @@ const group = 'reaper-scans';
       const content = cleanAndExtractImages(readerArea);
       const title = extractMangaTitle();
       const chapter = extractChapterTitle();
+      const chapterLink = extractChapterLink();
+      const nextChapterLink = extractNextChapterLink();
       const data = {
         group,
         title,
         chapter,
         content,
+        chapterLink,
+        nextChapterLink,
       };
 
       await fetch(
@@ -147,5 +185,24 @@ const group = 'reaper-scans';
 
   // Append button to the body
   document.body.appendChild(downloadButton);
-})();
+}
 
+(function() {
+  'use strict';
+
+  window.addEventListener('load', main);
+  (new MutationObserver((mutationList) => {
+    mutationList.forEach((mutation) => {
+      switch (mutation.type) {
+        case "attributes":
+          switch (mutation.attributeName) {
+            case "href":
+              main();
+              break;
+          }
+          break;
+      }
+    });
+  })).observe('a.ch-next-btn', { attributes: true });
+})();
+ 
