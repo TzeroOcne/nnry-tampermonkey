@@ -119,15 +119,26 @@ function extractChapterLink() {
   return location.pathname.replace(/^\/+|\/+$/g, '');
 }
 
-function extractNextChapterLink() {
+/**
+ * @param {string} selector 
+ * */
+function extractAnchorLink(selector) {
   /** @type {HTMLAnchorElement|null} */
-  const nextChapterButton = document.querySelector('a.ch-next-btn');
-  if (!nextChapterButton) {
-    alert('Next chapter button not found');
+  const anchorChapterButton = document.querySelector(selector);
+  if (!anchorChapterButton) {
+    alert('Anchor button not found');
     throw new Error('Next chapter button not found');
   }
 
-  return (new URL(nextChapterButton.href)).pathname.replace(/^\/+|\/+$/g, '');
+  return (new URL(anchorChapterButton.href)).pathname.replace(/^\/+|\/+$/g, '');
+}
+
+function extractPrevChapterLink() {
+  return extractAnchorLink('a.ch-prev-btn');
+}
+
+function extractNextChapterLink() {
+  return extractAnchorLink('a.ch-next-btn');
 }
 
 function createDownloadButton() {
@@ -161,6 +172,7 @@ function main() {
       const title = extractMangaTitle();
       const chapter = extractChapterTitle();
       const chapterLink = extractChapterLink();
+      const prevChapterLink = extractPrevChapterLink();
       const nextChapterLink = extractNextChapterLink();
       const data = {
         group,
@@ -168,6 +180,7 @@ function main() {
         chapter,
         content,
         chapterLink,
+        prevChapterLink,
         nextChapterLink,
       };
 
